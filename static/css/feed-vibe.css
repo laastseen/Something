@@ -483,6 +483,13 @@
     gap: 10px;
 }
 
+@media (max-width: 768px) {
+    .author-page,
+    .feed-page {
+        margin-top: calc(var(--header-h, 56px) + 52px);
+    }
+}
+
 @media (max-width: 720px) {
     .channel-banner {
         height: 100px;

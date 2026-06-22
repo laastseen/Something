@@ -14,10 +14,11 @@ mkdir -p "$APP_DIR"
 chown -R www-data:www-data /var/www
 
 if [[ -n "$REPO_URL" ]]; then
-  if [[ ! -d "$APP_DIR/.git" ]]; then
-    git clone "$REPO_URL" "$APP_DIR"
+  if [[ -d "$APP_DIR/.git" ]]; then
+    cd "$APP_DIR" && git pull
   else
-    cd "$APP_DIR" && sudo -u www-data git pull
+    rm -rf "$APP_DIR"
+    git clone "$REPO_URL" "$APP_DIR"
   fi
 fi
 

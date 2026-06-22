@@ -177,20 +177,47 @@ body {
 }
 
 /* Sidebar Drawer */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    top: var(--header-h, 56px);
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 997;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.sidebar-backdrop.visible {
+    display: block;
+}
+
 .sidebar-drawer {
     position: fixed;
-    top: 56px;
+    top: var(--header-h, 56px);
     left: -240px;
+    bottom: 0;
     width: 240px;
-    height: calc(100vh - 56px);
+    height: auto;
+    min-height: calc(100dvh - var(--header-h, 56px));
     background: var(--bg-surface, #ffffff);
     z-index: 998;
     transition: left 0.3s ease;
     padding: 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
     display: flex;
     flex-direction: column;
     gap: 4px;
     box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@supports not (min-height: 100dvh) {
+    .sidebar-drawer {
+        min-height: calc(100vh - var(--header-h, 56px));
+    }
 }
 
 .sidebar-drawer.open {
@@ -322,6 +349,56 @@ body {
 @media (max-width: 1300px) {
     .container.with-sidebar {
         margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-wrap: wrap;
+        align-items: center;
+        height: auto;
+        min-height: var(--header-h, 56px);
+        padding: 8px 10px 10px;
+        gap: 6px 8px;
+    }
+
+    .header-left {
+        flex: 0 0 auto;
+    }
+
+    .header-right {
+        flex: 0 0 auto;
+        margin-left: auto;
+        gap: 4px;
+    }
+
+    .header-center {
+        order: 10;
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+
+    .search-container input {
+        font-size: 14px;
+        padding: 8px 14px;
+    }
+
+    .header-username,
+    .logo-text {
+        display: none;
+    }
+
+    .user-header-profile {
+        padding: 4px;
+    }
+
+    body.has-sidebar .container,
+    body.has-sidebar #main-container {
+        margin-top: calc(var(--header-h, 56px) + 52px);
+    }
+
+    .container {
+        margin-top: calc(var(--header-h, 56px) + 52px);
     }
 }
 

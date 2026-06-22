@@ -1,4 +1,5 @@
 <div class="notifications-wrap" id="notifications-wrap" hidden>
+    <button type="button" class="notifications-backdrop" id="notifications-backdrop" aria-hidden="true" tabindex="-1"></button>
     <button type="button" class="icon-btn notifications-btn" id="notifications-btn" aria-label="Уведомления" title="Уведомления" aria-expanded="false" aria-haspopup="true">
         <i data-lucide="bell"></i>
         <span class="notifications-badge" id="notifications-badge" hidden>0</span>
@@ -6,7 +7,12 @@
     <div class="notifications-panel" id="notifications-panel" hidden role="menu" aria-label="Уведомления о подписках">
         <div class="notifications-panel-header">
             <h3>Уведомления</h3>
-            <button type="button" class="notifications-mark-read" id="notifications-mark-read">Прочитать все</button>
+            <div class="notifications-panel-actions">
+                <button type="button" class="notifications-mark-read" id="notifications-mark-read">Прочитать все</button>
+                <button type="button" class="icon-btn notifications-close" id="notifications-close" aria-label="Закрыть">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
         </div>
         <div class="notifications-list" id="notifications-list">
             <p class="notifications-empty">Загрузка…</p>

@@ -33,12 +33,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const sidebar = document.getElementById('sidebar');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
     const mainContainer = document.getElementById('main-container');
+
+    function setSidebarOpen(isOpen) {
+        if (!sidebar) return;
+        sidebar.classList.toggle('open', isOpen);
+        if (mainContainer) mainContainer.classList.toggle('with-sidebar', isOpen);
+        if (sidebarBackdrop) {
+            sidebarBackdrop.classList.toggle('visible', isOpen);
+            sidebarBackdrop.hidden = !isOpen;
+        }
+    }
+
     if (sidebarToggle && sidebar) {
         sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-            if (mainContainer) mainContainer.classList.toggle('with-sidebar');
+            setSidebarOpen(!sidebar.classList.contains('open'));
         });
+    }
+    if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener('click', () => setSidebarOpen(false));
     }
     refreshLucideIcons();
     updateThemeToggleIcon();

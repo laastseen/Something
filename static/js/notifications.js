@@ -5,7 +5,13 @@
     const list = document.getElementById('notifications-list');
     const badge = document.getElementById('notifications-badge');
     const markAllBtn = document.getElementById('notifications-mark-read');
+    const closeBtn = document.getElementById('notifications-close');
+    const backdrop = document.getElementById('notifications-backdrop');
     if (!wrap || !btn || !panel || !list) return;
+
+    if (backdrop && backdrop.parentElement !== document.body) {
+        document.body.appendChild(backdrop);
+    }
 
     let open = false;
     let pollTimer = null;
@@ -111,35 +117,73 @@
     }
 
     function closePanel() {
+        if (!open) return;
         open = false;
         panel.hidden = true;
+        panel.classList.remove('is-open');
         btn.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('notifications-open');
+        if (backdrop) {
+            backdrop.classList.remove('visible');
+            backdrop.hidden = true;
+        }
     }
 
     function openPanel() {
         open = true;
         panel.hidden = false;
+        panel.classList.add('is-open');
         btn.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('notifications-open');
+        if (backdrop) {
+            backdrop.hidden = false;
+            backdrop.classList.add('visible');
+        }
         fetchList().then(() => markRead());
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
+    function isClickInside(target) {
+        return btn.contains(target) || panel.contains(target);
+    }
+
     btn.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         if (open) closePanel();
         else openPanel();
     });
 
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closePanel();
+        });
+    }
+
     if (markAllBtn) {
         markAllBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             markRead();
         });
     }
 
+    function onBackdropActivate(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        closePanel();
+    }
+
+    if (backdrop) {
+        backdrop.addEventListener('click', onBackdropActivate);
+        backdrop.addEventListener('touchend', onBackdropActivate, { passive: false });
+    }
+
     document.addEventListener('click', (e) => {
-        if (open && !wrap.contains(e.target)) closePanel();
-    });
+        if (open && !isClickInside(e.target)) closePanel();
+    }, true);
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && open) closePanel();
