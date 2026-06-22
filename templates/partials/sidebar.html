@@ -1,0 +1,26 @@
+<div class="sidebar-drawer" id="sidebar">
+    <a href="/" class="drawer-item {% if nav_active == 'home' %}active{% endif %}">
+        <i data-lucide="home"></i><span>Главная</span>
+    </a>
+    <a href="/profile" class="drawer-item {% if nav_active == 'profile' %}active{% endif %}">
+        <i data-lucide="user"></i><span>Мой канал</span>
+    </a>
+    <div class="drawer-divider"></div>
+    <a href="/wiki" class="drawer-item {% if nav_active == 'wiki' %}active{% endif %}">
+        <i data-lucide="book-open"></i><span>Wiki тегов</span>
+    </a>
+    <div class="drawer-divider"></div>
+    <p class="drawer-label">Категории</p>
+    <a href="/?type=video" class="drawer-item {% if active_type == 'video' %}active{% endif %}">
+        <i data-lucide="video"></i><span>Видео</span>
+    </a>
+    <a href="/?type=image" class="drawer-item {% if active_type == 'image' %}active{% endif %}">
+        <i data-lucide="image"></i><span>Картинки</span>
+    </a>
+    <a href="/?type=audio" class="drawer-item {% if active_type == 'audio' %}active{% endif %}">
+        <i data-lucide="music"></i><span>Аудио</span>
+    </a>
+    <a href="/?type=document" class="drawer-item {% if active_type == 'document' %}active{% endif %}">
+        <i data-lucide="file-text"></i><span>Документы</span>
+    </a>
+</div>

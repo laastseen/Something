@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Wiki тегов — Something{% endblock %}
+{% set nav_active = 'wiki' %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/wiki.css">
+{% endblock %}
+
+{% block header_right %}
+{{ super() }}
+{% if user %}
+<a href="/profile" class="user-header-profile">
+    <div class="user-avatar-initial">{{ user.username[0].upper() }}</div>
+    <span class="header-username">{{ user.username }}</span>
+</a>
+{% else %}
+<a href="/login" class="user-auth-btn">Войти</a>
+{% endif %}
+{% endblock %}
+
+{% block sidebar %}
+{% include 'partials/sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<main class="container" id="main-container">
+<div class="wiki-page">
+    <header class="wiki-hero">
+        <div class="wiki-hero-main">
+            <div class="wiki-hero-icon"><i data-lucide="book-open"></i></div>
+            <h1>Энциклопедия тегов</h1>
+            <p class="wiki-intro">Официальные категории для поиска и фильтрации контента. Добавляйте их при публикации или ищите материалы по хештегу.</p>
+        </div>
+        <div class="wiki-stats">
+            <div class="wiki-stat">
+                <div class="wiki-stat-value">{{ tags|length }}</div>
+                <div class="wiki-stat-label">Тегов</div>
+            </div>
+        </div>
+    </header>
+
+    {% if user and user.role == 'admin' %}
+    <section class="wiki-admin-panel" id="wiki-admin">
+        <div class="wiki-admin-header">
+            <i data-lucide="settings"></i>
+            <h2>Управление тегами</h2>
+        </div>
+        <form action="/api/wiki/save" method="POST" class="wiki-admin-form">
+            <input type="hidden" name="id" id="edit-id">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit-name">Название</label>
+                    <input type="text" name="name" id="edit-name" required placeholder="Например: технологии">
+                </div>
+                <div class="form-group">
+                    <label for="edit-color">Цвет</label>
+                    <div class="wiki-color-field">
+                        <span class="wiki-color-preview" id="color-preview" style="background-color:#4CAF50;"></span>
+                        <input type="text" name="color" id="edit-color" required value="#4CAF50" pattern="^#[0-9A-Fa-f]{6}$" title="Формат: #RRGGBB">
+                    </div>
+                </div>
+                <div class="form-group form-row-submit">
+                    <button type="submit" class="submit-btn">Сохранить</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edit-desc">Описание</label>
+                <textarea name="description" id="edit-desc" required rows="3" placeholder="Кратко опишите, какой контент относится к этому тегу"></textarea>
+            </div>
+        </form>
+    </section>
+    {% endif %}
+
+    <div class="wiki-toolbar">
+        <h2><i data-lucide="tags"></i> Все теги</h2>
+        <div class="wiki-search">
+            <i data-lucide="search" class="wiki-search-icon"></i>
+            <input type="search" id="wiki-filter" placeholder="Поиск по названию или описанию..." autocomplete="off">
+        </div>
+    </div>
+
+    <div class="tags-grid" id="tags-grid">
+        {% for tag in tags %}
+        <article class="tag-card" data-name="{{ tag.name|lower }}" data-desc="{{ tag.description|lower }}">
+            <div class="tag-card-accent" style="background-color:{{ tag.color }};"></div>
+            <div class="tag-card-body">
+                <div class="tag-card-top">
+                    <a href="/?q=%23{{ tag.name }}" class="tag-name-link" style="background-color:{{ tag.color }};">
+                        #{{ tag.name }}
+                        <i data-lucide="arrow-up-right"></i>
+                    </a>
+                </div>
+                <p class="tag-desc">{{ tag.description }}</p>
+                <div class="tag-card-footer">
+                    <a href="/?q=%23{{ tag.name }}" class="tag-browse">
+                        Смотреть контент
+                        <i data-lucide="chevron-right"></i>
+                    </a>
+                    {% if user and user.role == 'admin' %}
+                    <div class="tag-card-actions">
+                        <button type="button" class="btn-edit" onclick='editTag({{ tag|tojson }})'>
+                            <i data-lucide="pencil"></i> Изменить
+                        </button>
+                        <form action="/api/wiki/delete" method="POST" onsubmit="return confirm('Удалить тег «{{ tag.name }}»?')">
+                            <input type="hidden" name="id" value="{{ tag.id }}">
+                            <button type="submit" class="btn-delete">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+        {% else %}
+        <p class="wiki-empty">Теги пока не добавлены.</p>
+        {% endfor %}
+        <p class="wiki-empty wiki-empty-filter" id="wiki-no-results">Ничего не найдено</p>
+    </div>
+</div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const colorInput = document.getElementById('edit-color');
+    const colorPreview = document.getElementById('color-preview');
+    if (colorInput && colorPreview) {
+        const syncColor = () => {
+            const v = colorInput.value.trim();
+            if (/^#[0-9A-Fa-f]{6}$/.test(v)) colorPreview.style.backgroundColor = v;
+        };
+        colorInput.addEventListener('input', syncColor);
+        syncColor();
+    }
+
+    const filter = document.getElementById('wiki-filter');
+    const cards = document.querySelectorAll('.tag-card');
+    const noResults = document.getElementById('wiki-no-results');
+    if (filter && cards.length) {
+        filter.addEventListener('input', () => {
+            const q = filter.value.trim().toLowerCase();
+            let visible = 0;
+            cards.forEach((card) => {
+                const name = card.dataset.name || '';
+                const desc = card.dataset.desc || '';
+                const show = !q || name.includes(q) || desc.includes(q);
+                card.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            if (noResults) noResults.style.display = q && visible === 0 ? 'block' : 'none';
+        });
+    }
+})();
+
+function editTag(tag) {
+    const id = document.getElementById('edit-id');
+    if (!id) return;
+    id.value = tag.id;
+    document.getElementById('edit-name').value = tag.name;
+    document.getElementById('edit-color').value = tag.color;
+    document.getElementById('edit-desc').value = tag.description;
+    const preview = document.getElementById('color-preview');
+    if (preview) preview.style.backgroundColor = tag.color;
+    const panel = document.getElementById('wiki-admin');
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+</script>
+{% endblock %}

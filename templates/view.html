@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% block title %}{{ media.title }} — Something{% endblock %}
+{% set show_sidebar_toggle = false %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/view.css">
+<link rel="stylesheet" href="/static/css/feed-vibe.css">
+{% endblock %}
+
+{% block header_right %}
+{{ super() }}
+{% if user %}
+<a href="/profile" class="user-header-profile">
+    <div class="user-avatar-initial">{{ user.username[0].upper() }}</div>
+    <span class="header-username">{{ user.username }}</span>
+</a>
+{% else %}
+<a href="/login" class="user-auth-btn">Войти</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="view-container">
+    <div class="main-content">
+        <a href="/" class="back-link"><i data-lucide="arrow-left"></i> На главную</a>
+        <div class="media-player{% if media.media_type == 'document' %} media-player--document{% endif %}">
+            {% if media.media_type == 'video' %}
+            <video src="{{ media.web_path }}" controls></video>
+            {% elif media.media_type == 'image' %}
+            <img src="{{ media.web_path }}" alt="{{ media.title }}">
+            {% elif media.media_type == 'audio' %}
+            <div class="audio-player-wrap">
+                <i data-lucide="music" class="audio-icon"></i>
+                <audio src="{{ media.web_path }}" controls></audio>
+            </div>
+            {% elif media.media_type == 'document' and doc_view and doc_view.kind == 'pdf' %}
+            <iframe src="{{ media.web_path }}" class="doc-iframe" title="{{ media.title }}"></iframe>
+            {% elif media.media_type == 'document' and doc_view and doc_view.kind == 'image' %}
+            <img src="{{ media.web_path }}" alt="{{ media.title }}" class="doc-image">
+            {% elif media.media_type == 'document' and doc_view and doc_view.kind == 'text' %}
+            <div class="doc-text-viewer">
+                <div class="doc-text-toolbar">
+                    <span class="doc-filename"><i data-lucide="file-text"></i> {{ doc_view.filename }}</span>
+                    <a href="{{ media.web_path }}" class="doc-download-link" download>
+                        <i data-lucide="download"></i> Скачать
+                    </a>
+                </div>
+                <pre class="doc-text-content">{{ doc_view.text }}</pre>
+                {% if doc_view.truncated %}
+                <p class="doc-truncated-hint">Показана только часть файла. Скачайте документ, чтобы открыть целиком.</p>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="doc-player">
+                <i data-lucide="file-text"></i>
+                <p>{{ media.title }}</p>
+                {% if doc_view and doc_view.filename %}
+                <p class="doc-fallback-name">{{ doc_view.filename }}</p>
+                {% endif %}
+                <p class="doc-fallback-hint">Предпросмотр для этого формата недоступен. Скачайте файл или загрузите PDF, TXT или изображение.</p>
+                <a href="{{ media.web_path }}" class="user-auth-btn" download>
+                    <i data-lucide="download"></i> Скачать документ
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="info-section">
+            <h1 class="video-title">{{ media.title }}</h1>
+            <div class="video-meta">
+                <a href="/author/{{ media.author_id }}" class="author-info author-info-link">
+                    <div class="user-avatar-initial lg">{{ media.author_name[0].upper() if media.author_name else 'A' }}</div>
+                    <div>
+                        <div class="author-name">{{ media.author_name }} <span class="user-special-tag">Автор</span></div>
+                        <div class="author-handle">@{{ media.owner_username }}</div>
+                    </div>
+                </a>
+                <div class="interaction-bar">
+                    {% if user and not is_owner %}
+                    <button type="button" class="subscribe-btn {% if subscribed_author %}subscribed{% endif %}" onclick="toggleSubscribe({{ media.author_id }}, this)">
+                        {% if subscribed_author %}<i data-lucide="bell-off"></i> Вы подписаны{% else %}<i data-lucide="bell"></i> Подписаться{% endif %}
+                    </button>
+                    {% endif %}
+                    {% if is_owner %}
+                    <button type="button" class="report-btn" onclick="openEditMediaView()"><i data-lucide="pencil"></i> Редактировать</button>
+                    <button type="button" class="report-btn" onclick="deleteMediaView({{ media.id }})"><i data-lucide="trash-2"></i> Удалить</button>
+                    {% endif %}
+                    <div class="like-dislike-container">
+                        <button class="interact-btn {% if user_like == 1 %}active-like{% endif %}" onclick="submitLike({{ media.id }}, 1)" id="like-btn" type="button">
+                            <i data-lucide="thumbs-up"></i> <span id="likes-count">{{ likes.likes }}</span>
+                        </button>
+                        <div class="divider"></div>
+                        <button class="interact-btn {% if user_like == -1 %}active-dislike{% endif %}" onclick="submitLike({{ media.id }}, -1)" id="dislike-btn" type="button">
+                            <i data-lucide="thumbs-down"></i> <span id="dislikes-count">{{ likes.dislikes }}</span>
+                        </button>
+                    </div>
+                    {% if user %}
+                    <button type="button" class="report-btn" id="open-report-modal" aria-label="Пожаловаться">
+                        <i data-lucide="flag"></i> Пожаловаться
+                    </button>
+                    {% if playlists %}
+                    <select class="playlist-select" onchange="addToPlaylistLocal(this, {{ media.id }})">
+                        <option value="" disabled selected>В плейлист</option>
+                        {% for pl in playlists %}
+                        <option value="{{ pl.id }}">{{ pl.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="tags-container">
+                {% for tag in tags %}
+                <div class="tag-pill {% if tag.is_author_tag %}author-tag{% elif tag.std_color %}standard wiki-tag{% endif %}" {% if tag.std_color and not tag.is_author_tag %}style="--wiki-tag-color: {{ tag.std_color }}"{% endif %}>
+                    {% if tag.is_author_tag %}
+                    <span class="author-tag-badge">автор</span>
+                    {% else %}
+                    <button class="vote-btn vote-up" type="button" onclick="voteTag({{ media.id }}, {{ tag.id }}, 1)">▲</button>
+                    <span class="tag-votes">{{ tag.votes }}</span>
+                    <button class="vote-btn vote-down" type="button" onclick="voteTag({{ media.id }}, {{ tag.id }}, -1)">▼</button>
+                    {% endif %}
+                    <a href="/?q=%23{{ tag.name }}" class="tag-link">#{{ tag.name }}</a>
+                </div>
+                {% endfor %}
+                <div class="add-tag-form">
+                    <input type="text" id="new-tag-input" class="add-tag-input" placeholder="Добавить тег">
+                    <button type="button" class="icon-btn" onclick="addTagLocal({{ media.id }})" aria-label="Добавить тег"><i data-lucide="plus"></i></button>
+                    <a href="/wiki" class="icon-btn" title="Wiki тегов"><i data-lucide="book-open"></i></a>
+                </div>
+                {% if is_owner %}
+                <div class="author-tag-controls">
+                    {% if author_personal_tag %}
+                    <button type="button" class="author-tag-btn {% if has_author_tag_on_media %}active{% endif %}" onclick="toggleAuthorTag({{ media.id }})">
+                        {% if has_author_tag_on_media %}
+                        <i data-lucide="badge-check"></i> Убрать #{{ author_personal_tag }}
+                        {% else %}
+                        <i data-lucide="badge-plus"></i> Добавить #{{ author_personal_tag }}
+                        {% endif %}
+                    </button>
+                    {% else %}
+                    <a href="/profile" class="author-tag-hint">Задайте персональный тег в личном кабинете</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="media-desc-box">{{ media.description or 'Описание отсутствует' }}</div>
+        </div>
+
+        <div class="comments-section">
+            <h3>Комментарии ({{ comments|length }})</h3>
+            <div class="comment-input-container">
+                <div class="user-avatar-initial">{{ user.username[0].upper() if user else '?' }}</div>
+                <div class="comment-box">
+                    {% if user %}
+                    <input type="text" id="comment-field" class="comment-input" placeholder="Введите комментарий...">
+                    <button class="comment-submit" type="button" onclick="submitCommentLocal({{ media.id }})">Отправить</button>
+                    {% else %}
+                    <input type="text" class="comment-input" placeholder="Войдите, чтобы комментировать" disabled>
+                    <a href="/login" class="comment-submit">Войти</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% for comment in comments %}
+            <div class="comment-item">
+                <div class="user-avatar-initial">{{ comment.username[0].upper() }}</div>
+                <div>
+                    <div class="comment-author">@{{ comment.username }} · <span class="comment-date">{{ comment.comment_date }}</span></div>
+                    <div class="comment-text">{{ comment.comment_text }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <h3><i data-lucide="layers"></i> Похожий контент</h3>
+        {% if not recommendations %}
+        <p class="sidebar-empty">Пока нет похожих материалов</p>
+        {% endif %}
+        {% for rec in recommendations %}
+        <a href="/view/{{ rec.id }}" class="sidebar-item">
+            <div class="sidebar-thumb" style="background-image:url('{{ rec.thumbnail }}')"></div>
+            <div class="sidebar-info">
+                <div class="sidebar-title">{{ rec.title }}</div>
+                <div class="sidebar-meta">{{ rec.author_name }} · {{ rec.views }} просмотров</div>
+            </div>
+        </a>
+        {% endfor %}
+    </aside>
+</div>
+
+{% if user %}
+<div id="report-modal" class="modal report-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Пожаловаться</h2>
+            <button type="button" class="close-report-modal icon-btn" aria-label="Закрыть"><i data-lucide="x"></i></button>
+        </div>
+        <p class="report-intro">Жалоба на автора <strong>@{{ media.owner_username }}</strong>. Модераторы рассмотрят обращение.</p>
+        <form id="report-form">
+            <input type="hidden" name="reported_author_id" value="{{ media.author_id }}">
+            <input type="hidden" name="media_id" value="{{ media.id }}">
+            {% for key, label in report_reasons.items() %}
+            <label class="report-reason-option">
+                <input type="radio" name="reason" value="{{ key }}" required>
+                <span class="report-reason-label">{{ label }}</span>
+            </label>
+            {% endfor %}
+            <div class="form-group" style="margin-top:12px;">
+                <label>Дополнительные сведения (необязательно)</label>
+                <textarea name="details" placeholder="Опишите проблему подробнее..."></textarea>
+            </div>
+            <button type="submit" class="submit-btn" style="margin-top:16px;">Отправить жалобу</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if is_owner %}
+<div id="edit-media-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Редактировать</h3>
+            <button type="button" class="close-modal icon-btn" onclick="closeEditMediaView()" aria-label="Закрыть"><i data-lucide="x"></i></button>
+        </div>
+        <form id="edit-media-form-view">
+            <input type="hidden" name="media_id" value="{{ media.id }}">
+            <div class="form-group">
+                <label>Название</label>
+                <input type="text" name="title" value="{{ media.title }}" required>
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea name="description" rows="4">{{ media.description or '' }}</textarea>
+            </div>
+            {% if media.media_type != 'document' %}
+            <div class="form-group">
+                <label>Новая обложка</label>
+                <input type="file" name="thumbnail" accept="image/jpeg,image/png,image/webp,image/gif">
+            </div>
+            {% endif %}
+            <button type="submit" class="submit-btn">Сохранить</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/feed.js"></script>
+<script src="/static/js/script.js"></script>
+<script src="/static/js/view.js"></script>
+<script>
+function openEditMediaView() {
+    const m = document.getElementById('edit-media-modal');
+    if (m) { m.style.display = 'block'; if (typeof lucide !== 'undefined') lucide.createIcons(); }
+}
+function closeEditMediaView() {
+    const m = document.getElementById('edit-media-modal');
+    if (m) m.style.display = 'none';
+}
+async function deleteMediaView(id) {
+    if (!confirm('Удалить публикацию?')) return;
+    const fd = new FormData(); fd.append('id', id);
+    const res = await fetch('/api/media/delete', { method: 'POST', body: fd });
+    if (res.ok) window.location.href = '/profile';
+    else alert('Ошибка');
+}
+const editFormView = document.getElementById('edit-media-form-view');
+if (editFormView) {
+    editFormView.onsubmit = async (e) => {
+        e.preventDefault();
+        const res = await fetch('/api/media/update', { method: 'POST', body: new FormData(e.target) });
+        if (res.ok) location.reload();
+        else alert('Ошибка сохранения');
+    };
+}
+window.addEventListener('click', (e) => {
+    const m = document.getElementById('edit-media-modal');
+    if (m && e.target === m) closeEditMediaView();
+});
+</script>
+{% endblock %}

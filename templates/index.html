@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Главная — Something{% endblock %}
+{% block body_class %}has-sidebar{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/feed-vibe.css">
+{% endblock %}
+
+{% block header_center %}
+<div class="header-center">
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="Поиск по названию или #тегу" value="{{ query or '' }}">
+        <button class="search-btn icon-btn" id="search-button" type="button" aria-label="Поиск">
+            <i data-lucide="search"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block header_right %}
+{{ super() }}
+{% if user %}
+<button class="action-btn icon-btn" id="open-upload-modal" type="button" title="Загрузить контент" aria-label="Загрузить">
+    <i data-lucide="upload"></i>
+</button>
+<a href="/profile" class="user-header-profile" title="Личный кабинет">
+    <div class="user-avatar-initial">{{ user.username[0].upper() }}</div>
+    <span class="header-username">{{ user.username }}</span>
+</a>
+{% else %}
+<a href="/login" class="user-auth-btn">Войти</a>
+{% endif %}
+{% endblock %}
+
+{% block sidebar %}
+{% set nav_active = 'home' if not query and active_type == 'videos' else '' %}
+{% include 'partials/sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+{% if user %}
+<div id="upload-modal" class="modal upload-modal">
+    <div class="modal-content upload-modal-content">
+        <div class="modal-header">
+            <h2>Загрузить контент</h2>
+            <button type="button" class="close-modal icon-btn" aria-label="Закрыть"><i data-lucide="x"></i></button>
+        </div>
+        <form id="upload-form">
+            <div class="form-group">
+                <label>Название</label>
+                <input type="text" name="title" required>
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea name="description" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Тип контента</label>
+                <select name="media_type" id="upload-type" required>
+                    <option value="video">Видео</option>
+                    <option value="image">Картинка</option>
+                    <option value="audio">Аудио</option>
+                    <option value="document">Документ</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Файл</label>
+                <input type="file" name="file" id="upload-file" required>
+            </div>
+            <div class="form-group" id="thumbnail-group">
+                <label for="upload-thumbnail">Обложка (превью в ленте)</label>
+                <input type="file" name="thumbnail" id="upload-thumbnail" accept="image/jpeg,image/png,image/webp,image/gif">
+                <p class="upload-hint" id="thumbnail-hint">Загрузите картинку для карточки в ленте. Для изображений необязательно — будет использован сам файл.</p>
+                <div id="thumbnail-preview" class="thumbnail-preview" hidden>
+                    <img id="thumbnail-preview-img" alt="Предпросмотр превью">
+                </div>
+            </div>
+            <label class="consent-checkbox">
+                <input type="checkbox" name="consent_rights" value="1" required>
+                <span>Подтверждаю, что обладаю правами на публикуемый контент и согласен с <a href="/privacy" target="_blank">политикой конфиденциальности</a></span>
+            </label>
+            <button type="submit" class="submit-btn">Опубликовать</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<main class="container" id="main-container">
+    {% if query %}
+    <h2 class="section-title-main">Результаты: «{{ query }}»</h2>
+    {% else %}
+    <h2 class="section-title-main">
+        <i data-lucide="sparkles" style="width:22px;height:22px;"></i>
+        <span>Рекомендовано для вас</span>
+        <span class="rec-tag">Подборка</span>
+    </h2>
+    <section class="content-grid rec-section">
+        {% if not recommended %}
+        <div class="empty-state">Начните смотреть и оценивать контент — рекомендации подстроятся под вас.</div>
+        {% endif %}
+        {% for rec in recommended %}
+        <article class="content-item vibe-card" onclick="window.location.href='/view/{{ rec.id }}'"{% if rec.preview_url %} data-preview-url="{{ rec.preview_url }}"{% endif %}>
+            <div class="thumbnail-wrap">
+                <div class="thumbnail" style="background-image:url('{{ rec.thumbnail }}')"></div>
+            </div>
+            <div class="content-info">
+                <div class="user-avatar-initial card-avatar">{{ rec.author_name[0].upper() if rec.author_name else 'A' }}</div>
+                <div class="content-text">
+                    <h3 class="content-title">{{ rec.title }}</h3>
+                    <p class="content-meta">{% if rec.author_id %}<a href="/author/{{ rec.author_id }}" class="card-author-link" onclick="event.stopPropagation()">@{{ rec.owner_username or rec.author_name }}</a>{% else %}{{ rec.author_name }}{% endif %} · {{ rec.views }} просмотров</p>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    <nav class="category-switcher">
+        <button class="category-btn {% if active_type == 'videos' or active_type == 'video' %}active{% endif %}" data-type="videos">Видео</button>
+        <button class="category-btn {% if active_type == 'images' or active_type == 'image' %}active{% endif %}" data-type="images">Картинки</button>
+        <button class="category-btn {% if active_type == 'audio' %}active{% endif %}" data-type="audio">Аудио</button>
+        <button class="category-btn {% if active_type == 'documents' or active_type == 'document' %}active{% endif %}" data-type="documents">Документы</button>
+    </nav>
+    <section id="content-grid" class="content-grid"></section>
+    <div id="feed-sentinel" class="feed-sentinel" aria-hidden="true"></div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>const feedConfig = {{ feed_config | tojson }};</script>
+<script src="/static/js/feed.js"></script>
+<script src="/static/js/script.js"></script>
+{% endblock %}

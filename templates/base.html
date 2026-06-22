@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Something{% endblock %}</title>
+    <script>
+    (function(){var k='something-theme',s=localStorage.getItem(k),d=window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme',s||(d?'dark':'light'));})();
+    </script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/legal.css">
+    <link rel="stylesheet" href="/static/css/notifications.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="/static/js/theme.js" defer></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    {% block header %}
+    <header class="header">
+        <div class="header-left">
+            {% if show_sidebar_toggle is not defined or show_sidebar_toggle %}
+            <button class="menu-btn icon-btn" id="sidebar-toggle" type="button" aria-label="Меню">
+                <i data-lucide="menu"></i>
+            </button>
+            {% endif %}
+            <a href="/" class="logo" style="text-decoration:none;color:inherit;">
+                <div class="logo-mark" aria-hidden="true">
+                    <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+                <span class="logo-text">Something</span>
+            </a>
+        </div>
+        {% block header_center %}{% endblock %}
+        <div class="header-right">
+            <button class="icon-btn" id="theme-toggle" type="button" aria-label="Сменить тему" title="Сменить тему">
+                <i data-lucide="moon" id="theme-toggle-icon"></i>
+            </button>
+            {% include "partials/notifications-bell.html" %}
+            {% block header_right %}{% endblock %}
+        </div>
+    </header>
+    {% endblock %}
+
+    {% block sidebar %}{% endblock %}
+    {% block content %}{% endblock %}
+
+    {% if hide_footer is not defined or not hide_footer %}
+    {% include "partials/footer.html" %}
+    {% endif %}
+
+    {% include "partials/cookie-banner.html" %}
+    {% include "partials/sources-modal.html" %}
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="/static/js/cookie-consent.js" defer></script>
+    <script src="/static/js/sources-modal.js" defer></script>
+    <script src="/static/js/notifications.js" defer></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+*.db
+.env
+.venv/
+venv/
+.idea/
+.vscode/
+*.log
+
+# Локальные загрузки и БД — на сервере создаются заново
+media_platform.db
+uploads/*
+!uploads/stock/.gitkeep
+
+# Дубликат папки (не часть основного проекта)
+srcdodep/
+
+# OS
+Thumbs.db
+.DS_Store

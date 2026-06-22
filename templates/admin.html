@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Админ-панель — Something{% endblock %}
+{% set show_sidebar_toggle = false %}
+
+{% block extra_head %}
+<style>
+.admin-container { max-width: 1400px; margin: calc(var(--header-h) + 24px) auto 24px; padding: 0 20px; }
+.admin-nav { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; flex-wrap: wrap; }
+.admin-nav-btn { background: var(--bg-muted); border: none; font-weight: 600; cursor: pointer; padding: 8px 16px; border-radius: 8px; font-size: 14px; color: var(--text-primary); }
+.admin-nav-btn.active { background: var(--accent); color: #fff; }
+.admin-section { display: none; }
+.admin-section.active { display: block; }
+.status-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.status-pending { background: #fef3c7; color: #92400e; }
+.status-reviewed { background: var(--success-soft); color: var(--success); }
+.status-dismissed { background: var(--bg-muted); color: var(--text-secondary); }
+.status-admin { background: var(--accent-soft); color: var(--accent); }
+.delete-btn { color: var(--danger); cursor: pointer; background: none; border: none; font-weight: 600; }
+.resolve-btn { color: var(--accent); cursor: pointer; background: none; border: none; font-weight: 600; margin-right: 8px; }
+</style>
+{% endblock %}
+
+{% block header_right %}
+{{ super() }}
+<a href="/" class="user-auth-btn" style="background:var(--bg-muted);color:var(--text-primary);">На сайт</a>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1>Панель управления</h1>
+    <div class="admin-nav">
+        <button type="button" class="admin-nav-btn active" data-section="users">Пользователи</button>
+        <button type="button" class="admin-nav-btn" data-section="media">Контент</button>
+        <button type="button" class="admin-nav-btn" data-section="reports">Жалобы ({{ reports|length }})</button>
+    </div>
+
+    <div id="section-users" class="admin-section active">
+        <table class="admin-table">
+            <thead><tr><th>ID</th><th>Логин</th><th>Email</th><th>Роль</th><th>Регистрация</th><th></th></tr></thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.id }}</td><td>{{ u.username }}</td><td>{{ u.email }}</td>
+                    <td><span class="status-badge status-{{ u.role }}">{{ u.role }}</span></td>
+                    <td>{{ u.registration_date }}</td>
+                    <td>{% if u.id != user.id %}<button class="delete-btn" onclick="deleteItem('user', {{ u.id }})">Удалить</button>{% else %}—{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="section-media" class="admin-section">
+        <table class="admin-table">
+            <thead><tr><th>ID</th><th>Название</th><th>Тип</th><th>Автор</th><th>Просмотры</th><th></th></tr></thead>
+            <tbody>
+                {% for m in media %}
+                <tr>
+                    <td>{{ m.id }}</td>
+                    <td><a href="/view/{{ m.id }}" style="color:var(--accent);">{{ m.title }}</a></td>
+                    <td>{{ m.media_type }}</td><td>@{{ m.author_username }}</td><td>{{ m.views }}</td>
+                    <td><button class="delete-btn" onclick="deleteItem('media', {{ m.id }})">Удалить</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="section-reports" class="admin-section">
+        <table class="admin-table">
+            <thead>
+                <tr><th>ID</th><th>От</th><th>На автора</th><th>Контент</th><th>Причина</th><th>Статус</th><th>Дата</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for r in reports %}
+                <tr>
+                    <td>{{ r.id }}</td>
+                    <td>@{{ r.reporter_username }}</td>
+                    <td>{{ r.reported_author_name }}</td>
+                    <td>{% if r.media_title %}<a href="/view/{{ r.media_id }}" style="color:var(--accent);">{{ r.media_title }}</a>{% else %}—{% endif %}</td>
+                    <td>{{ report_reasons.get(r.reason, r.reason) }}</td>
+                    <td><span class="status-badge status-{{ r.status }}">{{ r.status }}</span></td>
+                    <td>{{ r.created_at }}</td>
+                    <td>
+                        {% if r.status == 'pending' %}
+                        <button class="resolve-btn" onclick="setReportStatus({{ r.id }}, 'reviewed')">Принято</button>
+                        <button class="delete-btn" onclick="setReportStatus({{ r.id }}, 'dismissed')">Отклонить</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" style="text-align:center;color:var(--text-secondary);">Жалоб пока нет</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const name = btn.dataset.section;
+        document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('section-' + name).classList.add('active');
+        btn.classList.add('active');
+    });
+});
+async function deleteItem(type, id) {
+    if (!confirm('Удалить?')) return;
+    const fd = new FormData(); fd.append('id', id);
+    const res = await fetch('/api/admin/delete/' + type, { method: 'POST', body: fd });
+    if (res.ok) location.reload(); else alert('Ошибка');
+}
+async function setReportStatus(id, status) {
+    const fd = new FormData(); fd.append('id', id); fd.append('status', status);
+    const res = await fetch('/api/admin/report/status', { method: 'POST', body: fd });
+    if (res.ok) location.reload(); else alert('Ошибка');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}{{ display_name }} — Канал{% endblock %}
+{% block body_class %}has-sidebar{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/feed-vibe.css">
+{% endblock %}
+
+{% block header_right %}
+{{ super() }}
+{% if user %}
+<a href="/profile" class="user-header-profile">
+    <div class="user-avatar-initial">{{ user.username[0].upper() }}</div>
+    <span class="header-username">{{ user.username }}</span>
+</a>
+{% else %}
+<a href="/login" class="user-auth-btn">Войти</a>
+{% endif %}
+{% endblock %}
+
+{% block sidebar %}
+{% include 'partials/sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<main class="author-page" id="main-container">
+    <a href="/" class="channel-back">
+        <i data-lucide="arrow-left"></i>
+        <span>На главную</span>
+    </a>
+
+    <header class="channel-hero">
+        <div class="channel-banner" aria-hidden="true">
+            <div class="channel-banner-mesh"></div>
+            <div class="channel-banner-shine"></div>
+        </div>
+        <div class="channel-hero-inner">
+            <div class="channel-avatar-wrap">
+                <div class="channel-avatar" aria-hidden="true">{{ display_name[0].upper() }}</div>
+                <span class="channel-avatar-ring"></span>
+            </div>
+            <div class="channel-body">
+                <div class="channel-title-row">
+                    <div class="channel-titles">
+                        <h1 class="channel-name">{{ display_name }}</h1>
+                        <p class="channel-handle">@{{ author.username }}</p>
+                        {% if author.personal_tag %}
+                        <a href="/?q=%23{{ author.personal_tag }}" class="channel-personal-tag">#{{ author.personal_tag }}</a>
+                        {% endif %}
+                    </div>
+                    <div class="channel-actions">
+                        {% if user and not is_self %}
+                        <button type="button" class="subscribe-btn {% if subscribed %}subscribed{% endif %}" id="channel-subscribe-btn" onclick="toggleSubscribe({{ author.id }}, this)">
+                            {% if subscribed %}
+                            <i data-lucide="bell-off"></i><span>Отписаться</span>
+                            {% else %}
+                            <i data-lucide="bell"></i><span>Подписаться</span>
+                            {% endif %}
+                        </button>
+                        {% elif is_self and user %}
+                        <a href="/profile" class="subscribe-btn subscribe-btn--accent">
+                            <i data-lucide="user"></i><span>Личный кабинет</span>
+                        </a>
+                        {% elif not user %}
+                        <a href="/login" class="subscribe-btn subscribe-btn--accent">
+                            <i data-lucide="log-in"></i><span>Войти и подписаться</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="channel-stats">
+                    <span class="channel-stat" id="subscriber-count">
+                        <i data-lucide="users"></i>
+                        <strong>{{ author.subscriber_count }}</strong> подписчиков
+                    </span>
+                    <span class="channel-stat-divider" aria-hidden="true"></span>
+                    <span class="channel-stat">
+                        <i data-lucide="layers"></i>
+                        <strong>{{ author.media_count }}</strong> публикаций
+                    </span>
+                </div>
+                {% if author.bio %}
+                <p class="channel-bio">{{ author.bio }}</p>
+                {% else %}
+                <p class="channel-bio channel-bio--muted">Добро пожаловать на канал {{ display_name }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <nav class="category-switcher channel-tabs">
+        <button class="category-btn {% if active_type == 'videos' or active_type == 'video' %}active{% endif %}" data-type="videos">Видео</button>
+        <button class="category-btn {% if active_type == 'images' or active_type == 'image' %}active{% endif %}" data-type="images">Картинки</button>
+        <button class="category-btn {% if active_type == 'audio' %}active{% endif %}" data-type="audio">Аудио</button>
+        <button class="category-btn {% if active_type == 'documents' or active_type == 'document' %}active{% endif %}" data-type="documents">Документы</button>
+    </nav>
+    <section id="content-grid" class="content-grid"></section>
+    <div id="feed-sentinel" class="feed-sentinel" aria-hidden="true"></div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>const feedConfig = {{ feed_config | tojson }};</script>
+<script src="/static/js/feed.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof Feed !== 'undefined' && typeof feedConfig !== 'undefined') Feed.init(feedConfig);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+</script>
+{% endblock %}

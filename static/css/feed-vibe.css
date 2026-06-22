@@ -1,0 +1,530 @@
+/* Лента, канал автора, «продолжить просмотр» */
+
+.vibe-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vibe-card:hover {
+    transform: translateY(-2px);
+}
+
+.thumbnail-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius, 12px);
+    overflow: hidden;
+    background: var(--bg-muted);
+}
+
+.thumbnail-wrap .thumbnail {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    transition: opacity 0.25s ease;
+}
+
+.thumbnail-wrap.is-previewing .thumbnail {
+    opacity: 0;
+}
+
+.hover-preview-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 2;
+}
+
+.card-author-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.card-author-link:hover {
+    color: var(--accent);
+}
+
+.card-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+#content-grid.is-loading::after {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 32px;
+    margin: 24px auto;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: feed-spin 0.7s linear infinite;
+}
+
+@keyframes feed-spin {
+    to { transform: rotate(360deg); }
+}
+
+.feed-sentinel {
+    height: 1px;
+    width: 100%;
+}
+
+/* Канал автора */
+.author-page {
+    max-width: 1200px;
+    margin: calc(var(--header-h, 56px) + 12px) auto 40px;
+    padding: 0 24px;
+}
+
+.channel-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 8px 14px 8px 10px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.channel-back:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.channel-back svg {
+    width: 18px;
+    height: 18px;
+}
+
+.channel-hero {
+    position: relative;
+    margin-bottom: 28px;
+    border-radius: 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 12px 40px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.channel-banner {
+    position: relative;
+    height: 140px;
+    background: linear-gradient(120deg, #1e3a5f 0%, #3b82f6 35%, #7c3aed 70%, #ec4899 100%);
+    overflow: hidden;
+}
+
+[data-theme="dark"] .channel-banner {
+    background: linear-gradient(120deg, #0f172a 0%, #1e40af 40%, #5b21b6 75%, #9d174d 100%);
+}
+
+.channel-banner-mesh {
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
+        repeating-linear-gradient(
+            -12deg,
+            transparent,
+            transparent 48px,
+            rgba(255, 255, 255, 0.03) 48px,
+            rgba(255, 255, 255, 0.03) 49px
+        );
+    opacity: 0.9;
+}
+
+.channel-banner-shine {
+    position: absolute;
+    top: -50%;
+    left: -20%;
+    width: 60%;
+    height: 200%;
+    background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.15) 50%, transparent 60%);
+    transform: rotate(-8deg);
+    pointer-events: none;
+}
+
+.channel-hero-inner {
+    display: flex;
+    gap: 24px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    padding: 0 28px 28px;
+    margin-top: -44px;
+    position: relative;
+    z-index: 1;
+}
+
+.channel-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.channel-avatar {
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, var(--accent) 0%, #6366f1 50%, #a855f7 100%);
+    color: #fff;
+    font-size: 42px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid var(--bg-surface);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.12),
+        0 0 0 1px rgba(0, 0, 0, 0.04);
+    letter-spacing: -0.02em;
+}
+
+.channel-avatar-ring {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+.channel-body {
+    flex: 1;
+    min-width: 240px;
+    padding-top: 52px;
+}
+
+.channel-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.channel-titles {
+    min-width: 0;
+}
+
+.channel-name {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    color: var(--text-primary);
+}
+
+.channel-handle {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.channel-personal-tag {
+    display: inline-flex;
+    margin-top: 10px;
+    padding: 6px 14px;
+    border-radius: var(--radius-pill, 999px);
+    background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
+.channel-personal-tag:hover {
+    filter: brightness(1.08);
+    color: #fff;
+}
+
+.channel-actions {
+    flex-shrink: 0;
+    padding-top: 4px;
+}
+
+.channel-stats {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 4px;
+    margin-bottom: 14px;
+}
+
+.channel-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--bg-muted);
+    border: 1px solid var(--border);
+}
+
+.channel-stat svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.channel-stat strong {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.channel-stat-divider {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    margin: 0 4px;
+}
+
+.channel-bio {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text-primary);
+    max-width: 640px;
+}
+
+.channel-bio--muted {
+    color: var(--text-secondary);
+    font-style: normal;
+}
+
+.subscribe-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: 999px;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    background: var(--text-primary);
+    color: var(--bg-surface);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.subscribe-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.subscribe-btn--accent {
+    background: var(--accent);
+    color: #fff;
+}
+
+.subscribe-btn--accent:hover {
+    background: var(--accent-hover);
+}
+
+.subscribe-btn.subscribed {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
+    box-shadow: none;
+}
+
+.subscribe-btn.subscribed:hover {
+    background: var(--bg-muted);
+    transform: none;
+}
+
+.subscribe-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.channel-tabs.category-switcher {
+    margin-bottom: 8px;
+    padding: 4px;
+    background: var(--bg-muted);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.channel-tabs .category-btn {
+    border-radius: 10px;
+    border: none;
+    padding: 10px 18px;
+    font-weight: 600;
+    font-size: 14px;
+    background: transparent;
+    color: var(--text-secondary);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.channel-tabs .category-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-surface);
+}
+
+.channel-tabs .category-btn.active {
+    background: var(--bg-surface);
+    color: var(--accent);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Продолжить просмотр */
+.continue-section {
+    margin-bottom: 28px;
+}
+
+.continue-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 14px;
+}
+
+.continue-title svg {
+    width: 20px;
+    height: 20px;
+    color: var(--accent);
+}
+
+.continue-rail {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.continue-rail::-webkit-scrollbar {
+    height: 6px;
+}
+
+.continue-card {
+    flex: 0 0 220px;
+    scroll-snap-align: start;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.continue-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.continue-thumb {
+    aspect-ratio: 16 / 9;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--bg-muted);
+}
+
+.continue-info {
+    padding: 10px 12px;
+}
+
+.continue-info h4 {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.continue-info span {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.rec-section .content-item {
+    cursor: pointer;
+}
+
+.section-title-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+@media (max-width: 720px) {
+    .channel-banner {
+        height: 100px;
+    }
+
+    .channel-hero-inner {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 0 20px 24px;
+        margin-top: -40px;
+    }
+
+    .channel-body {
+        padding-top: 8px;
+        width: 100%;
+    }
+
+    .channel-title-row {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .channel-actions {
+        width: 100%;
+    }
+
+    .channel-actions .subscribe-btn {
+        width: 100%;
+    }
+
+    .channel-stats {
+        justify-content: center;
+    }
+
+    .channel-bio {
+        text-align: center;
+        margin-inline: auto;
+    }
+
+    .channel-tabs.category-switcher {
+        width: 100%;
+        justify-content: center;
+    }
+}

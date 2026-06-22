@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Личный кабинет — Something{% endblock %}
+{% set nav_active = 'profile' %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/feed-vibe.css">
+{% endblock %}
+
+{% block header_right %}
+{{ super() }}
+<a href="/profile" class="user-header-profile" title="Личный кабинет">
+    <div class="user-avatar-initial">{{ user.username[0].upper() }}</div>
+    <span class="header-username">{{ user.username }}</span>
+</a>
+<a href="/logout" class="header-link danger">Выйти</a>
+{% endblock %}
+
+{% block sidebar %}
+{% include 'partials/sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<main class="container" id="main-container">
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">{{ user.username[0].upper() }}</div>
+        <div class="profile-info">
+            <h1>{{ user.username }}</h1>
+            <p>Email: {{ user.email }} · Роль: {{ user.role }} · {{ user.registration_date }}</p>
+            {% if author %}
+            <a href="/author/{{ author.id }}" class="header-link" style="display:inline-block;margin-top:10px;">Мой канал</a>
+            {% endif %}
+            {% if user.role == 'admin' %}
+            <a href="/admin" class="header-link danger" style="display:inline-block;margin-top:10px;">Админ-панель</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if continue_watching %}
+    <section class="continue-section section-card" style="padding:20px;margin-bottom:24px;">
+        <h2 class="continue-title"><i data-lucide="play-circle"></i> Продолжить просмотр</h2>
+        <div class="continue-rail">
+            {% for item in continue_watching %}
+            <a href="/view/{{ item.id }}" class="continue-card">
+                <div class="continue-thumb" style="background-image:url('{{ item.thumbnail }}')"></div>
+                <div class="continue-info">
+                    <h4>{{ item.title }}</h4>
+                    <span>{{ item.author_name }} · {{ item.viewed_at[:16] if item.viewed_at else '' }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <div class="profile-sections">
+        <div class="left-column">
+            <div class="section-card">
+                <h2 class="section-title">Мои публикации</h2>
+                <div class="item-list">
+                    {% if not uploads %}
+                    <p class="text-muted">Вы ещё ничего не опубликовали</p>
+                    {% endif %}
+                    {% for item in uploads %}
+                    <div class="media-item-row">
+                        <div class="media-item-thumb" style="background-image:url('{{ item.thumbnail }}')" onclick="window.location.href='/view/{{ item.id }}'"></div>
+                        <div class="media-item-info" onclick="window.location.href='/view/{{ item.id }}'" style="cursor:pointer;flex:1;">
+                            <span class="media-item-title">{{ item.title }}</span>
+                            <span class="media-item-meta">{{ item.views }} просмотров · {{ item.media_type }} · {{ item.upload_date }}</span>
+                        </div>
+                        <button class="remove-btn" type="button" onclick="openEditMedia({{ item|tojson }})">Изменить</button>
+                        <button class="remove-btn" type="button" onclick="deleteMedia({{ item.id }})">Удалить</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="section-card author-personal-tag-card">
+                <h2 class="section-title"><i data-lucide="badge"></i> Персональный тег</h2>
+                <p class="text-muted personal-tag-hint">Ваш уникальный тег — только вы можете добавлять его на свои публикации. Зрители увидят его с пометкой «автор».</p>
+                <form id="personal-tag-form" class="personal-tag-form">
+                    <div class="form-group">
+                        <label for="personal-tag-input">Имя тега</label>
+                        <div class="personal-tag-row">
+                            <span class="personal-tag-prefix">#</span>
+                            <input type="text" id="personal-tag-input" maxlength="32" placeholder="мойбренд" value="{{ author.personal_tag if author and author.personal_tag else '' }}">
+                        </div>
+                    </div>
+                    <div class="personal-tag-actions">
+                        <button type="submit" class="submit-btn">Сохранить</button>
+                        {% if author and author.personal_tag %}
+                        <button type="button" class="remove-btn" id="clear-personal-tag">Удалить</button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+            <div class="section-card">
+                <div class="section-title">
+                    <span>Мои плейлисты</span>
+                    <button class="create-playlist-btn" type="button" onclick="openPlaylistModal()">Создать</button>
+                </div>
+                <div class="item-list">
+                    {% if not playlists %}
+                    <p class="text-muted">Нет плейлистов</p>
+                    {% endif %}
+                    {% for pl in playlists %}
+                    <a href="/playlists/{{ pl.id }}" class="playlist-badge">
+                        <span>{{ pl.name }}</span>
+                        <span class="media-item-meta">{{ pl.creation_date[:10] }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</main>
+
+<div id="playlist-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Создать плейлист</h3>
+            <button type="button" class="close-modal icon-btn" onclick="closePlaylistModal()" aria-label="Закрыть"><i data-lucide="x"></i></button>
+        </div>
+        <form id="playlist-form">
+            <div class="form-group">
+                <label>Название</label>
+                <input type="text" id="pl-name" required>
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea id="pl-desc" rows="3"></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Создать</button>
+        </form>
+    </div>
+</div>
+
+<div id="edit-media-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Редактировать публикацию</h3>
+            <button type="button" class="close-modal icon-btn" onclick="closeEditMedia()" aria-label="Закрыть"><i data-lucide="x"></i></button>
+        </div>
+        <form id="edit-media-form">
+            <input type="hidden" id="edit-media-id" name="media_id">
+            <div class="form-group">
+                <label>Название</label>
+                <input type="text" id="edit-media-title" name="title" required>
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea id="edit-media-desc" name="description" rows="4"></textarea>
+            </div>
+            <div class="form-group" id="edit-thumb-group">
+                <label>Новая обложка (необязательно)</label>
+                <input type="file" name="thumbnail" accept="image/jpeg,image/png,image/webp,image/gif">
+            </div>
+            <button type="submit" class="submit-btn">Сохранить</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const plModal = document.getElementById('playlist-modal');
+const editModal = document.getElementById('edit-media-modal');
+function openPlaylistModal() { plModal.style.display = 'block'; if (typeof lucide !== 'undefined') lucide.createIcons(); }
+function closePlaylistModal() { plModal.style.display = 'none'; }
+function openEditMedia(item) {
+    document.getElementById('edit-media-id').value = item.id;
+    document.getElementById('edit-media-title').value = item.title || '';
+    document.getElementById('edit-media-desc').value = item.description || '';
+    document.getElementById('edit-thumb-group').hidden = item.media_type === 'document';
+    editModal.style.display = 'block';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function closeEditMedia() { editModal.style.display = 'none'; }
+window.onclick = (e) => {
+    if (e.target == plModal) closePlaylistModal();
+    if (e.target == editModal) closeEditMedia();
+};
+document.getElementById('playlist-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData();
+    fd.append('name', document.getElementById('pl-name').value);
+    fd.append('description', document.getElementById('pl-desc').value);
+    const res = await fetch('/api/playlist/create', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (res.ok) location.reload();
+    else alert(data.message || 'Ошибка');
+};
+document.getElementById('edit-media-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const res = await fetch('/api/media/update', { method: 'POST', body: new FormData(e.target) });
+    const data = await res.json();
+    if (res.ok) location.reload();
+    else alert(data.message || 'Ошибка');
+};
+async function deleteMedia(id) {
+    if (!confirm('Удалить публикацию?')) return;
+    const fd = new FormData(); fd.append('id', id);
+    const res = await fetch('/api/media/delete', { method: 'POST', body: fd });
+    if (res.ok) location.reload(); else alert('Ошибка');
+};
+
+const personalTagForm = document.getElementById('personal-tag-form');
+if (personalTagForm) {
+    personalTagForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('personal-tag-input')?.value.trim();
+        if (!name) { alert('Введите имя тега'); return; }
+        const res = await fetch('/api/author/personal-tag', {
+            method: 'POST',
+            body: new URLSearchParams({ name }),
+        });
+        const data = await res.json();
+        if (res.ok) location.reload();
+        else alert(data.message || 'Ошибка');
+    };
+}
+const clearPersonalTagBtn = document.getElementById('clear-personal-tag');
+if (clearPersonalTagBtn) {
+    clearPersonalTagBtn.onclick = async () => {
+        if (!confirm('Удалить персональный тег со всех публикаций?')) return;
+        const res = await fetch('/api/author/personal-tag/clear', { method: 'POST' });
+        if (res.ok) location.reload();
+        else alert('Ошибка');
+    };
+}
+</script>
+{% endblock %}

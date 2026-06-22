@@ -1,0 +1,16 @@
+{% macro legal_page(title, updated) %}
+<article class="legal-page">
+    <div class="legal-page-inner">
+        <h1 class="legal-page-title">{{ title }}</h1>
+        <p class="legal-page-updated">Дата последнего обновления: {{ updated }}</p>
+        {{ caller() }}
+        <section class="legal-contact">
+            <h2>Контактные данные оператора</h2>
+            <p><strong>Щепков Алексей Владимирович</strong></p>
+            <p>160000, Вологда, улица Сергея Преминина, 10Б</p>
+            <p>Телефон: <a href="tel:+79115385688">+7 911 538 56 88</a></p>
+            <p>Email: <a href="mailto:alesasepkov@gmail.com">alesasepkov@gmail.com</a></p>
+        </section>
+    </div>
+</article>
+{% endmacro %}

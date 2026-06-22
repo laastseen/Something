@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Регистрация — Something{% endblock %}
+{% set show_sidebar_toggle = false %}
+{% block header %}
+<header class="header" style="background:transparent;border:none;box-shadow:none;">
+    <div class="header-right" style="width:100%;justify-content:flex-end;">
+        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Сменить тему"><i data-lucide="moon" id="theme-toggle-icon"></i></button>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="logo-mark auth-logo"><i data-lucide="user-plus"></i></div>
+        <h2 class="auth-title">Регистрация</h2>
+        {% if error %}
+        <div class="form-error">{{ error }}</div>
+        {% endif %}
+        <form action="/register" method="POST">
+            <div class="form-group">
+                <label for="username">Имя пользователя</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <label class="consent-checkbox">
+                <input type="checkbox" name="consent_pd" value="1" required>
+                <span>Согласен на обработку персональных данных в соответствии с <a href="/privacy" target="_blank">Политикой конфиденциальности</a> и <a href="/personal-data" target="_blank">Политикой обработки ПДн</a></span>
+            </label>
+            <button type="submit" class="submit-btn">Создать аккаунт</button>
+        </form>
+        <p class="auth-link">Уже есть аккаунт? <a href="/login">Войти</a></p>
+        <p class="auth-link"><a href="/">На главную</a></p>
+    </div>
+</div>
+{% endblock %}

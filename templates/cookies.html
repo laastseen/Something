@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "partials/legal-doc.html" import legal_page %}
+{% block title %}Политика использования cookie — Something{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/legal.css">{% endblock %}
+
+{% block content %}
+{% call legal_page("Политика использования cookie", "22 июня 2026 г.") %}
+<section>
+    <h2>1. Что такое cookie</h2>
+    <p>Файлы cookie — это небольшие текстовые файлы, которые сохраняются на вашем устройстве при посещении веб-сайтов. Они помогают сайту запоминать информацию о вашем визите и обеспечивать корректную работу сервиса.</p>
+</section>
+
+<section>
+    <h2>2. Какие cookie мы используем</h2>
+    <table class="legal-table">
+        <thead>
+            <tr><th>Название</th><th>Тип</th><th>Назначение</th><th>Срок</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>session_token</code></td>
+                <td>Обязательный</td>
+                <td>Авторизация пользователя, поддержание сессии</td>
+                <td>7 дней</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>Обязательные cookie необходимы для работы Сайта и не могут быть отключены без потери функциональности (например, вход в аккаунт).</p>
+</section>
+
+<section>
+    <h2>3. Локальное хранилище (localStorage)</h2>
+    <p>Помимо cookie, Сайт использует локальное хранилище браузера для сохранения предпочтений:</p>
+    <table class="legal-table">
+        <thead>
+            <tr><th>Ключ</th><th>Назначение</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>something-theme</code></td>
+                <td>Сохранение выбранной темы оформления (светлая / тёмная)</td>
+            </tr>
+            <tr>
+                <td><code>something-cookie-consent</code></td>
+                <td>Запоминание факта принятия уведомления о cookie</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h2>4. Сторонние сервисы</h2>
+    <p>Сайт может загружать ресурсы с внешних CDN (шрифты Google Fonts, иконки Lucide). Эти сервисы могут устанавливать собственные cookie в соответствии со своими политиками конфиденциальности.</p>
+    <p>Мы не используем рекламные или аналитические cookie третьих лиц.</p>
+</section>
+
+<section>
+    <h2>5. Управление cookie</h2>
+    <p>Вы можете управлять cookie через настройки браузера: заблокировать, удалить или ограничить их использование. Обратите внимание, что отключение обязательных cookie приведёт к невозможности авторизации на Сайте.</p>
+    <p>Инструкции по управлению cookie в популярных браузерах:</p>
+    <ul>
+        <li><a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener">Google Chrome</a></li>
+        <li><a href="https://support.mozilla.org/ru/kb/kuki-informaciya-kotoruyu-veb-sajty-hranyat-na-vas" target="_blank" rel="noopener">Mozilla Firefox</a></li>
+        <li><a href="https://support.microsoft.com/ru-ru/microsoft-edge/удаление-файлов-cookie-в-microsoft-edge" target="_blank" rel="noopener">Microsoft Edge</a></li>
+    </ul>
+</section>
+
+<section>
+    <h2>6. Согласие на использование cookie</h2>
+    <p>При первом посещении Сайта отображается уведомление об использовании cookie. Нажимая кнопку «Принять», вы подтверждаете согласие с настоящей Политикой.</p>
+    <p>Вы можете в любой момент удалить cookie через настройки браузера.</p>
+</section>
+
+<section>
+    <h2>7. Связанные документы</h2>
+    <p>Также действуют: <a href="/privacy">Политика конфиденциальности</a> и <a href="/personal-data">Политика обработки персональных данных</a>.</p>
+</section>
+{% endcall %}
+{% endblock %}

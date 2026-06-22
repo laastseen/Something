@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Вход — Something{% endblock %}
+{% set show_sidebar_toggle = false %}
+
+{% block header %}
+<header class="header" style="background:transparent;border:none;box-shadow:none;">
+    <div class="header-right" style="width:100%;justify-content:flex-end;">
+        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Сменить тему"><i data-lucide="moon" id="theme-toggle-icon"></i></button>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="logo-mark auth-logo"><i data-lucide="play"></i></div>
+        <h2 class="auth-title">Вход в Something</h2>
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <label for="username_or_email">Логин или email</label>
+                <input type="text" id="username_or_email" name="username_or_email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="submit-btn">Войти</button>
+        </form>
+        <p class="auth-link">Нет аккаунта? <a href="/register">Регистрация</a></p>
+        <p class="auth-link"><a href="/">На главную</a></p>
+    </div>
+</div>
+{% endblock %}

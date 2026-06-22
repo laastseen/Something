@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ playlist.name }} — Плейлист{% endblock %}
+{% set show_sidebar_toggle = false %}
+
+{% block header_right %}
+{{ super() }}
+<a href="/" class="header-link">На главную</a>
+{% if user %}
+<a href="/profile" class="header-link">Личный кабинет</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="playlist-container playlist-page">
+    <div class="playlist-sidebar">
+        <h1 class="playlist-title">{{ playlist.name }}</h1>
+        <div class="playlist-meta">
+            <p>Владелец: @{{ owner.username }}</p>
+            <p>Создан: {{ playlist.creation_date[:10] }}</p>
+            <p>Записей: {{ media_items|length }}</p>
+        </div>
+        {% if playlist.description %}
+        <div class="playlist-desc">{{ playlist.description }}</div>
+        {% endif %}
+    </div>
+
+    <div class="media-list">
+        {% if not media_items %}
+        <div class="playlist-empty">
+            <p>В плейлисте пока нет контента</p>
+            <a href="/" class="header-link" style="display:inline-block;margin-top:10px;">Найти на главной</a>
+        </div>
+        {% endif %}
+        {% for item in media_items %}
+        <div class="media-item-row" onclick="location.href='/view/{{ item.id }}'">
+            <div class="media-item-thumb" style="background-image:url('{{ item.thumbnail }}')"></div>
+            <div class="media-item-info">
+                <div class="media-item-title">{{ item.title }}</div>
+                <div class="media-item-meta">{{ item.author_name }} · {{ item.views }} просмотров</div>
+            </div>
+            {% if user and user.id == playlist.user_id %}
+            <button type="button" class="remove-btn" onclick="event.stopPropagation(); removeMedia({{ playlist.id }}, {{ item.id }})">Убрать</button>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function removeMedia(playlistId, mediaId) {
+    if (!confirm('Убрать из плейлиста?')) return;
+    const fd = new FormData();
+    fd.append('playlist_id', playlistId);
+    fd.append('media_id', mediaId);
+    const res = await fetch('/api/playlist/remove', { method: 'POST', body: fd });
+    if (res.ok) location.reload();
+    else alert('Ошибка');
+}
+</script>
+{% endblock %}
