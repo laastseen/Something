@@ -486,7 +486,8 @@
 @media (max-width: 768px) {
     .author-page,
     .feed-page {
-        margin-top: calc(var(--header-h, 56px) + 52px);
+        margin-top: var(--header-h, 56px);
+        padding: 0 12px;
     }
 }
 

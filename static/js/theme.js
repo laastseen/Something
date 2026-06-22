@@ -23,6 +23,15 @@ function setTheme(theme) {
     updateThemeToggleIcon();
 }
 
+function updateLayoutVars() {
+    const header = document.querySelector('.header');
+    const vh = window.visualViewport?.height ?? window.innerHeight;
+    if (header) {
+        document.documentElement.style.setProperty('--header-h', `${header.offsetHeight}px`);
+    }
+    document.documentElement.style.setProperty('--viewport-h', `${vh}px`);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('theme-toggle');
     if (btn) {
@@ -53,6 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (sidebarBackdrop) {
         sidebarBackdrop.addEventListener('click', () => setSidebarOpen(false));
+    }
+    updateLayoutVars();
+    window.addEventListener('resize', updateLayoutVars);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', updateLayoutVars);
+        window.visualViewport.addEventListener('scroll', updateLayoutVars);
     }
     refreshLucideIcons();
     updateThemeToggleIcon();
